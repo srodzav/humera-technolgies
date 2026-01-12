@@ -7,13 +7,32 @@ export default function ProjectsPage() {
     // variables
     const [projects, setProjects] = useState([]);
     const [name, setName] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     async function fetchProjects() {
-        const res = await fetch("/api/projects");
-        const data = await res.json();
-        if (data.ok) {
-            console.log(data.data);
-            setProjects(data.data);
+        setIsLoading(true);
+        setError("");
+        try {
+            // simulation
+            // await new Promise (r => setTimeout(r, 3000));
+            // throw new Error("Simulated server error");
+
+            const res = await fetch("/api/projects");
+            const data = await res.json();
+            if (data.ok) {
+                setProjects(data.data);
+            } else {
+                setError(data.message);
+            }
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError("An unknown error occurred");
+            }
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -22,8 +41,9 @@ export default function ProjectsPage() {
     }, []);
 
     async function createProject() {
+        setError("");
         if (!name || name.trim().length === 0) {
-            return alert("Please verify name");
+            return setError("Please verify name");
         }
 
         const res = await fetch("/api/projects", {
@@ -34,8 +54,8 @@ export default function ProjectsPage() {
             body: JSON.stringify({ name })
         });
 
-        if(!res.ok) {
-            alert("Failed to create Project");
+        if (!res.ok) {
+            setError("Failed to create Project");
         }
 
         setName("");
@@ -45,13 +65,22 @@ export default function ProjectsPage() {
     return (
         <div className="container">
             <h2>Project List</h2>
+
+            {error && (
+                <div className="alert-error">
+                    {error}
+                </div>
+            )}
+
             <div className="columns">
                 <input className="input" placeholder="Name" value={name} onChange={e=> setName(e.target.value)} />
 
-                <button className="btn btn-action" onClick={createProject}> Add Project </button>
+                <button className="btn btn-action" onClick={createProject} disabled={isLoading}> {isLoading ? "Loading..." : "Add Project"} </button>
             </div>
 
-            {projects.length > 0 ? (
+            {isLoading ? (
+                <p className="text-centered">Loading projects...</p>
+            ) : projects.length > 0 ? (
             <ul className="table">
                 <li className="row-single header">
                     <span> Name </span>

@@ -115,3 +115,7 @@ body {
 .btn-warning {
   background-color: red;
 }
+
+.alert-error {
+  color: red;
+}

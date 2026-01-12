@@ -15,19 +15,38 @@ export default function TasksPage() {
     const [description, setDescription] = useState('');
     const [assignee, setAssignee] = useState('');
     const [filter, setFilter] = useState("all");
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchTasks = useCallback(async () => {
-        let url = `/api/tasks?projectId=${projectId}`;
+        setIsLoading(true);
+        setError("");
+        try {
+            // simulation
+            // await new Promise (r => setTimeout(r, 3000));
+            // throw new Error("Simulated server error");
 
-        if(filter !== "all") {
-            url += `&status=${filter}`;
-        }
+            let url = `/api/tasks?projectId=${projectId}`;
 
-        const res = await fetch(url);
-        const data = await res.json();
-        if(data.ok) {
-            console.log(data.data);
-            setTasks(data.data);
+            if (filter !== "all") {
+                url += `&status=${filter}`;
+            }
+
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.ok) {
+                setTasks(data.data);
+            } else { 
+                setError(data.message);
+            }
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError("An unknown error occurred");
+            }
+        } finally {
+            setIsLoading(false);
         }
     }, [projectId, filter]);
 
@@ -36,11 +55,12 @@ export default function TasksPage() {
     }, [fetchTasks]);
 
     async function createTask() {
+        setError("");
         if (!title || title.trim().length === 0) {
-            return alert("Please verify title name");
+            return setError("Please verify title name");
         }
         if (!assignee || assignee.trim().length === 0) {
-            return alert("Please verify assignee name");
+            return setError("Please verify assignee name");
         }
 
         const res = await fetch("/api/tasks", {
@@ -51,8 +71,8 @@ export default function TasksPage() {
             body: JSON.stringify({ title, description, projectId, assignee })
         });
 
-        if(!res.ok) {
-            alert("Failed to create Task");
+        if (!res.ok) {
+            setError("Failed to create Task");
         }
 
         setTitle("");
@@ -62,8 +82,9 @@ export default function TasksPage() {
     }
 
     async function updateTask(id: number, status: string) {
-        if(!['todo','in_progress','done'].includes(status)) {
-            return alert("Please verify status");
+        setError("");
+        if (!['todo','in_progress','done'].includes(status)) {
+            return setError("Please verify status");
         }
 
         const res = await fetch("/api/tasks", {
@@ -74,16 +95,16 @@ export default function TasksPage() {
             body: JSON.stringify({ id, status })
         });
 
-        if(!res.ok) {
-            alert("Failed to update Task");
+        if (!res.ok) {
+            setError("Failed to update Task");
         }
-        
         await fetchTasks();
     }
 
     async function deleteTask(id: number){
-        if(!id) {
-            return alert ("id not valid");
+        setError("");
+        if (!id) {
+            return setError("id not valid");
         }
 
         const res = await fetch("/api/tasks", {
@@ -94,19 +115,19 @@ export default function TasksPage() {
             body: JSON.stringify({ id })
         });
 
-        if(!res.ok) {
-            alert("Failed to delete Task");
+        if (!res.ok) {
+            setError("Failed to delete Task");
         }
 
         await fetchTasks();
     }
     
-    const handleStatusChange = (id: number, event: any) => {
+    const handleStatusChange = (id: number, event: React.ChangeEvent<HTMLSelectElement>) => {
         const status = event.target.value;
         updateTask(id, status);
     }
 
-    const handleFilterChange = (event: any) => {
+    const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const filter = event.target.value;
         setFilter(filter);
     }
@@ -115,12 +136,19 @@ export default function TasksPage() {
         <div className="container">
             <h1> Task Tracker </h1>
             <h2>Project Tasks</h2>
+
+            {error && (
+                <div className="alert-error">
+                    {error}
+                </div>
+            )}
+
             <div className="columns">
                 <input className="input" placeholder="Title" value={title} onChange={e=> setTitle(e.target.value)} />
                 <input className="input" placeholder="Description" value={description} onChange={e=> setDescription(e.target.value)} />
                 <input className="input" placeholder="Assignee" value={assignee} onChange={e=> setAssignee(e.target.value)} />
 
-                <button className="btn btn-action" onClick={createTask}> Add Task </button>
+                <button className="btn btn-action" onClick={createTask} disabled={isLoading}> {isLoading ? "Loading..." : "Add Task"}  </button>
             </div>
 
             <div className="filter">
@@ -133,7 +161,9 @@ export default function TasksPage() {
                 </select>
             </div>
 
-            {tasks.length > 0 ? (
+            {isLoading ? (
+                <p className="text-centered">Loading tasks...</p>
+            ) : tasks.length > 0 ? (
             <ul className="table">
                 <li className="row header">
                     <span> Title </span>
