@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Task Tracker
 
-## Getting Started
+Simple internal tool to manage projects and tasks.
 
-First, run the development server:
+## Tech Stack
+- Next.js
+- TypeScript
+- PostgreSQL
+- CSS
 
+## Setup Instructions
+1. Clone the repository
+
+2. Install dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+    npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Start PostgreSQL.
+Make sure PostgreSQL is installed and running on your system.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+4. Create database and tables
+```bash
+    # database creation
+    createdb projects-db
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+    # schema
+    psql projects-db < lib/db.sql
+```
 
-## Learn More
+5. Create a .env.local file
+```bash
+    DATABASE_URL=postgresql://user:password@localhost:5432/projects-db
+```
 
-To learn more about Next.js, take a look at the following resources:
+6. Start the project
+```bash
+    npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Features
+- Create and list projects
+- Create tasks under projects
+- Update task status
+- Filter tasks by status
+- Delete tasks
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tradeoffs / Known Limitations
+- No authentication
+- No pagination for large task lists
+- Basic error handling
 
-## Deploy on Vercel
+## Technical Decisions
+### Backend
+- **PostgreSQL Connection Pool:** Used `pg` with connection pooling for database connections without use of ORMs.
+- **Raw SQL Queries:** Used raw SQL for direct control over queries.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Frontend
+- **Dynamic Routes:** Used Next.js dynamic routing (`/tasks/[projectId]`) for better navigation.
+- **Minimalistic UI:** Used basic CSS to focus on structure and development
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Improvements With More Time
+- Add pagination
+- Add basic authentication
+- Add optimistic UI updates
+- Add tests
+- Better error handling (toast notifications)
+- Full CRUD operations for Projects (currently only create and list)
