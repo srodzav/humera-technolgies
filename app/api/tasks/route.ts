@@ -8,6 +8,7 @@ export async function GET(req: Request) {
     const status = searchParams.get("status");
     let values: any[] = [projectId];
 
+    // validations
     if (!projectId) {
         return NextResponse.json({ ok: false, message: "Project is required" }, { status: 400 });
     }
@@ -61,9 +62,13 @@ export async function PUT(req: Request) {
     try {
         const body = await req.json();
         const { id, status } = body;
-
+        
         // validations
-        if(!['todo','in_progress','done'].includes(status)){
+        if (!id) {
+            return NextResponse.json({ message: 'id is required' }, { status: 400 });
+        }
+
+        if (!['todo','in_progress','done'].includes(status)){
             return NextResponse.json({ message: 'Invalid status' }, { status: 400 });
         }
 
